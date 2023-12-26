@@ -459,6 +459,38 @@ def edit_file():
 
 
 
+@app.route("/playlists", methods=["GET"])
+def browse():
+    search = False
+    q = request.args.get('q')
+    if q:
+        search = True
+    page = request.args.get(get_page_parameter(), type=int, default=1)
+
+    available_playlists = k.available_playlists
+
+    if "sort" in request.args and request.args["sort"] == "date":
+        songs = sorted(available_playlists, key=lambda x: os.path.getctime(x))
+        songs.reverse()
+        sort_order = "Date"
+    else:
+        songs = available_playlists
+        sort_order = "Alphabetical"
+    
+    results_per_page = 500
+    pagination = Pagination(css_framework='bulma', page=page, total=len(songs), search=search, record_name='songs', per_page=results_per_page)
+    start_index = (page - 1) * (results_per_page - 1)
+    return render_template(
+        "playlists.html",
+        pagination=pagination,
+        sort_order=sort_order,
+        site_title=site_name,
+        # MSG: Title of the files page.
+        title=_("Playlists"),
+        songs=songs[start_index:start_index + results_per_page],
+        admin=is_admin()
+    )
+
 @app.route("/playlists/delete", methods=["GET"])
 def delete_playlist():
     if "song" in request.args:
