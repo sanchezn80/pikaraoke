@@ -37,6 +37,7 @@ class Karaoke:
 
     queue = []
     available_songs = []
+    available_playlists = []
 
     # These all get sent to the /nowplaying endpoint for client-side polling
     now_playing = None
@@ -651,3 +652,35 @@ class Karaoke:
             except KeyboardInterrupt:
                 logging.warn("Keyboard interrupt: Exiting pikaraoke...")
                 self.running = False
+
+    def get_available_playlists(self):
+        logging.info("Fetching available playlists in: " + self.download_path)
+        types = ['.m3u', '.m3u8']
+        playlists_grabbed = []
+        P=Path(self.download_path)
+        for file in P.rglob('*.*'):
+            base, ext = os.path.splitext(file.as_posix())
+            if ext.lower() in types:
+                if os.path.isfile(file.as_posix()):
+                    logging.debug("adding playlist: " + file.name)
+                    playlists_grabbed.append(file.as_posix())
+
+        self.available_paylists = sorted(playlists_grabbed, key=lambda f: str.lower(os.path.basename(f)))
+
+    def delete_playlist(self, playlist_path):
+        logging.info("Deleting playlist: " + playlist_path)
+        with contextlib.suppress(FileNotFoundError):
+            os.remove(playlist_path)
+        ext = os.path.splitext(playlist_path)
+        
+        self.get_available_playlists()
+
+    def rename_playlist(self, playlist_path, new_name):
+        logging.info("Renaming playlist: '" + playlist_path + "' to: " + new_name)
+        ext = os.path.splitext(playlist_path)
+        if len(ext) == 2:
+            new_file_name = new_name + ext[1]
+        os.rename(playlist_path, self.download_path + new_file_name)
+        
+        self.get_available_playlists()
+
