@@ -460,7 +460,7 @@ def edit_file():
 
 
 @app.route("/playlists", methods=["GET"])
-def browse():
+def playlists():
     search = False
     q = request.args.get('q')
     if q:
@@ -494,10 +494,10 @@ def browse():
 @app.route("/playlists/delete", methods=["GET"])
 def delete_playlist():
     if "song" in request.args:
-        song_path = request.args["song"]
+        song_path = request.args["playlist"]
         if song_path in k.queue:
             flash(
-                "Error: Can't delete this song because it is in the current queue: "
+                "Error: Can't delete this playlist because it is in the current queue: "
                 + song_path,
                 "is-danger",
             )
@@ -506,7 +506,7 @@ def delete_playlist():
             flash("Song deleted: " + song_path, "is-warning")
     else:
         flash("Error: No song parameter specified!", "is-danger")
-    return redirect(url_for("browse"))
+    return redirect(url_for("playlists"))
 
 
 @app.route("/playlists/edit", methods=["GET", "POST"])
@@ -520,7 +520,7 @@ def edit_playlist():
             return redirect(url_for("browse"))
         else:
             return render_template(
-                "edit.html",
+                "edit_playlist.html",
                 site_title=site_name,
                 title="Song File Edit",
                 song=song_path.encode("utf-8", "ignore"),
@@ -552,7 +552,24 @@ def edit_playlist():
                     )
         else:
             flash("Error: No filename parameters were specified!", "is-danger")
-        return redirect(url_for("browse"))
+        return redirect(url_for("playlists"))
+
+
+@app.route("/enqueue_playlist", methods=["POST", "GET"])
+def enqueue_playlist():
+    if "playlist" in request.args:
+        song = request.args["playlist"]
+    else:
+        d = request.form.to_dict()
+        song = d["song-to-add"]
+    if "user" in request.args:
+        user = request.args["user"]
+    else:
+        d = request.form.to_dict()
+        user = d["song-added-by"]
+    rc = k.enqueue(song, user)
+    song_title = filename_from_path(song)
+    return json.dumps({"song": song_title, "success": rc })
 
 
 

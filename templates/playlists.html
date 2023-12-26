@@ -104,7 +104,7 @@
       <a
         class="add-song-link has-text-weight-bold has-text-success"
         title="Add '{{filename_from_path(playlist)}}' to queue"
-        href="{{url_for('enqueue')}}?playlist={{url_escape(playlist.encode('utf-8','surrogateescape'))}}&user="
+        href="{{url_for('enqueue_playlist')}}?playlist={{url_escape(playlist.encode('utf-8','surrogateescape'))}}&user="
         ><i class="icon icon-list-add"></i>
       </a>
     </td>
@@ -113,7 +113,7 @@
     <td width="20px">
       <a
         class="edit-button"
-        href="{{url_for('edit_playlist')}}?song={{url_escape(playlist.encode('utf-8','surrogateescape'))}}"
+        href="{{url_for('edit_playlist')}}?playlist={{url_escape(playlist.encode('utf-8','surrogateescape'))}}"
         title="Edit playlist"
         ><i class="icon icon-edit-1"></i>
       </a>
