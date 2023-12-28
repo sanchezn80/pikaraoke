@@ -20,15 +20,15 @@
       $.get(this.href + encodeURIComponent(user), function (data) {
         var obj = JSON.parse(data);
         if (obj.success) {
-          // {# MSG: Notification when a song gets added to the queue.  The song name comes after this string. #}
+          // {# MSG: Notification when a playlist gets added to the queue.  The playlist name comes after this string. #}
           showNotification(
-            "{{ _('Playlist added to the queue: ') }}" + obj.song,
+            "{{ _('Playlist added to the queue: ') }}" + obj.playlist,
             "is-success"
           );
         } else {
           // {# MSG: Notification when a playlist does not get added to the queue.  The playlist name comes after this string. #}
           showNotification(
-            "{{ _('Error adding playlist to queue') }}" + obj.song,
+            "{{ _('Error adding playlist to queue') }}" + obj.playlist,
             "is-danger"
           );
         }
@@ -73,17 +73,17 @@
 
 <p>
   {% if sort_order == "Alphabetical" %} {# MSG: Label which displays that the
-  songs are currently sorted by alphabetical order. #} {% trans %}Sorted
+  playlists are currently sorted by alphabetical order. #} {% trans %}Sorted
   Alphabetically{% endtrans %} |
   <a href="{{ url_for('playlists') }}?sort=date">
-    {# MSG: Button which changes how the songs are sorted so they become sorted
+    {# MSG: Button which changes how the playlists are sorted so they become sorted
     by date. #} {% trans %}Sort by Date{% endtrans %}
   </a>
   {% endif %} {% if sort_order == "Date" %} {# MSG: Label which displays that
-  the songs are currently sorted by date. #} {% trans %}Sorted by date{%
+  the playlists are currently sorted by date. #} {% trans %}Sorted by date{%
   endtrans %} |
   <a href="{{ url_for('playlists') }}">
-    {# MSG: Button which changes how the songs are sorted so they become sorted
+    {# MSG: Button which changes how the playlists are sorted so they become sorted
     by name. #} {% trans %}Sort by Alphabetical{% endtrans %}
   </a>
   {% endif %}
@@ -92,7 +92,7 @@
 {{ pagination.links }} {{ pagination.info }}
 <table>
   {% for playlist in playlists %}
-  <tr value="{{ song }}">
+  <tr value="{{ playlist }}">
     <td width="20px" style="padding: 5px 0px">
       {{loop.index + pagination.skip}}
     </td>
@@ -102,7 +102,7 @@
       style="padding: 5px 0px 5px 4px"
     >
       <a
-        class="add-song-link has-text-weight-bold has-text-success"
+        class="add-playlist-link has-text-weight-bold has-text-success"
         title="Add '{{filename_from_path(playlist)}}' to queue"
         href="{{url_for('enqueue_playlist')}}?playlist={{url_escape(playlist.encode('utf-8','surrogateescape'))}}&user="
         ><i class="icon icon-list-add"></i>

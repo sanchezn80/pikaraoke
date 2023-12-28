@@ -470,15 +470,15 @@ def playlists():
     available_playlists = k.available_playlists
 
     if "sort" in request.args and request.args["sort"] == "date":
-        songs = sorted(available_playlists, key=lambda x: os.path.getctime(x))
-        songs.reverse()
+        playlists = sorted(available_playlists, key=lambda x: os.path.getctime(x))
+        playlists.reverse()
         sort_order = "Date"
     else:
-        songs = available_playlists
+        playlists = available_playlists
         sort_order = "Alphabetical"
     
     results_per_page = 500
-    pagination = Pagination(css_framework='bulma', page=page, total=len(songs), search=search, record_name='songs', per_page=results_per_page)
+    pagination = Pagination(css_framework='bulma', page=page, total=len(playlists), search=search, record_name='songs', per_page=results_per_page)
     start_index = (page - 1) * (results_per_page - 1)
     return render_template(
         "playlists.html",
@@ -487,69 +487,65 @@ def playlists():
         site_title=site_name,
         # MSG: Title of the files page.
         title=_("Playlists"),
-        songs=songs[start_index:start_index + results_per_page],
+        playlists=playlists[start_index:start_index + results_per_page],
         admin=is_admin()
     )
 
 @app.route("/playlists/delete", methods=["GET"])
 def delete_playlist():
-    if "song" in request.args:
-        song_path = request.args["playlist"]
-        if song_path in k.queue:
+    if "playlist" in request.args:
+        playlist_path = request.args["playlist"]
+        if playlist_path in k.queue:
             flash(
                 "Error: Can't delete this playlist because it is in the current queue: "
-                + song_path,
+                + playlist_path,
                 "is-danger",
             )
         else:
-            k.delete(song_path)
-            flash("Song deleted: " + song_path, "is-warning")
+            k.delete(playlist_path)
+            flash("Playlist deleted: " + playlist_path, "is-warning")
     else:
-        flash("Error: No song parameter specified!", "is-danger")
+        flash("Error: No playlist parameter specified!", "is-danger")
     return redirect(url_for("playlists"))
 
 
 @app.route("/playlists/edit", methods=["GET", "POST"])
 def edit_playlist():
     queue_error_msg = "Error: Can't edit this playlist because it is in the current queue: "
-    if "song" in request.args:
-        song_path = request.args["song"]
+    if "playlist" in request.args:
+        playlist_path = request.args["playlist"]
         # print "SONG_PATH" + song_path
-        if song_path in k.queue:
-            flash(queue_error_msg + song_path, "is-danger")
+        if playlist_path in k.queue:
+            flash(queue_error_msg + playlist_path, "is-danger")
             return redirect(url_for("browse"))
         else:
             return render_template(
                 "edit_playlist.html",
                 site_title=site_name,
                 title="Song File Edit",
-                song=song_path.encode("utf-8", "ignore"),
+                playlist=playlist_path.encode("utf-8", "ignore"),
             )
     else:
         d = request.form.to_dict()
         if "new_file_name" in d and "old_file_name" in d:
             new_name = d["new_file_name"]
             old_name = d["old_file_name"]
-            if k.is_song_in_queue(old_name):
-                # check one more time just in case someone added it during editing
-                flash(queue_error_msg + song_path, "is-danger")
+            # check if new_name already exist
+            file_extension = os.path.splitext(old_name)[1]
+            if os.path.isfile(
+                os.path.join(k.download_path, new_name + file_extension)
+            ):
+                flash(
+                    "Error Renaming file: '%s' to '%s'. Filename already exists."
+                    % (old_name, new_name + file_extension),
+                    "is-danger",
+                )
             else:
-                # check if new_name already exist
-                file_extension = os.path.splitext(old_name)[1]
-                if os.path.isfile(
-                    os.path.join(k.download_path, new_name + file_extension)
-                ):
-                    flash(
-                        "Error Renaming file: '%s' to '%s'. Filename already exists."
-                        % (old_name, new_name + file_extension),
-                        "is-danger",
-                    )
-                else:
-                    k.rename(old_name, new_name)
-                    flash(
-                        "Renamed file: '%s' to '%s'." % (old_name, new_name),
-                        "is-warning",
-                    )
+                k.rename(old_name, new_name)
+                flash(
+                    "Renamed file: '%s' to '%s'." % (old_name, new_name),
+                    "is-warning",
+                )
         else:
             flash("Error: No filename parameters were specified!", "is-danger")
         return redirect(url_for("playlists"))
@@ -558,18 +554,18 @@ def edit_playlist():
 @app.route("/enqueue_playlist", methods=["POST", "GET"])
 def enqueue_playlist():
     if "playlist" in request.args:
-        song = request.args["playlist"]
+        playlist = request.args["playlist"]
     else:
         d = request.form.to_dict()
-        song = d["song-to-add"]
+        playlist = d["playlist-to-add"]
     if "user" in request.args:
         user = request.args["user"]
     else:
         d = request.form.to_dict()
-        user = d["song-added-by"]
-    rc = k.enqueue(song, user)
-    song_title = filename_from_path(song)
-    return json.dumps({"song": song_title, "success": rc })
+        user = d["playlist-added-by"]
+    rc = k.enqueue(playlist, user)
+    playlist_title = filename_from_path(playlist)
+    return json.dumps({"playlist": playlist_title, "success": rc })
 
 
 
